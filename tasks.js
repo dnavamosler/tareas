@@ -1,51 +1,85 @@
 const fs = require('fs')
+const ARCHIVO = `./BD/bd.json`
 
-const nombreArchivo = `./tasks/task.txt`
 
-let crearArchivo = async (data) => {
+let Tareas = [];
 
-    await fs.writeFile(nombreArchivo,data,(err) => {
-         if(err) throw Error('No se puedo escribir la informacion correctamente')
-     })       
-     return nombreArchivo
+let crear = (descripcion) => {
+
+    let tarea = {
+        descripcion,
+        status : false
+    }
+
+    cargarBD()
+    Tareas.push(tarea)
+
+    guardarBD(Tareas)
+
+    return tarea
 }
 
-
-let crearTarea = async (tarea) => {
-       
-
-     fs.readFile(nombreArchivo,'utf8', (err,data) =>{
-            if(err) throw new Error(`No se encontro el archivo especificado.`)
-        
-            let Tareas = data
-            Tareas += `#......................${tarea}\n`
-            crearArchivo(Tareas)
-        })
-}
-
-let leerArchivo = () =>{
-    fs.readFile(nombreArchivo, 'utf8',(err,data) =>{
-        if(err) throw new Error(`No se encontro el archivo especificado.`)
-
-        console.log(data)
+let guardarBD = () => {
+    let data = JSON.stringify(Tareas)
+    fs.writeFile(ARCHIVO, data, (err) => {
+        if(err) throw Error('No se puedo escribir la informacion correctamente')
     })
 }
 
-let editarTarea = (tarea) =>{
+let cargarBD = () =>{
 
-    fs.readFile(nombreArchivo, 'utf8',(err,data) =>{
-        if(err) throw new Error(`No se encontro el archivo especificado.`)
-        
-        let tareas = data.split('\n')
-        tareas.splice(tarea, 1)
-        console.log(tareas)
+    try {
+        Tareas = require('./BD/bd.json')
+    } catch (error) {
+        Tareas = []
+    }
+
+
+}
+
+let listar = () =>{
+    cargarBD()
+    return Tareas
+}
+
+let actualizar = (descripcion,status) => {
+
+    cargarBD()
+
+    for(let tarea of Tareas){
+        if(tarea.descripcion === descripcion){
+            tarea.status = status
+            guardarBD()
+            return true
+        }
+    }   
+
+}
+
+let borrar = (descripcion) => {
+    
+   cargarBD()
+
+   NuevasTareas =  Tareas.filter( tarea => tarea.descripcion != descripcion)
+
+   if(NuevasTareas.lenght === Tareas.length){
+       return false
+   } 
+   else{
+       Tareas = NuevasTareas
+     guardarBD()
+       return true
        
-    })
+   }
+
+   
+   
 }
 
 module.exports = {
-    crearTarea,
-    leerArchivo,
-    editarTarea
+    crear,
+    listar,
+    actualizar,
+    borrar
 }
 
